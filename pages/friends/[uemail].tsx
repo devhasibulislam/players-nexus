@@ -9,6 +9,7 @@ import UserRatings from "../../components/UserRatings";
 import UserReviews from "../../components/UserReviews";
 import ListCards from "../../components/ListCards";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 const UEmail: React.FC = () => {
   const router = useRouter();
@@ -83,6 +84,15 @@ const UEmail: React.FC = () => {
           className="h-[150px] w-[150px] rounded-full object-cover mx-auto"
         />
         <h1 className="text-center mt-2 text-xl">{user?.username}</h1>
+        {user?.bio && (
+          <Link
+            href={user?.bio}
+            target="_blank"
+            className="text-center block w-fit mx-auto"
+          >
+            {user?.bio}
+          </Link>
+        )}
       </div>
 
       <div className="flex flex-row items-center gap-x-4">

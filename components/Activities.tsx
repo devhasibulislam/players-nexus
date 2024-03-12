@@ -3,6 +3,9 @@ import React, { useState, useEffect } from "react";
 import { db } from "../firebase/firebase";
 import Image from "next/image";
 import { differenceInDays, differenceInWeeks } from "date-fns";
+import Sentiment from "sentiment";
+
+const sentiment = new Sentiment();
 
 const Activities = () => {
   const [myFriends, setMyFriends] = useState<any[]>([]);
@@ -115,6 +118,28 @@ const Activities = () => {
     }
   };
 
+  function reviewStats(review: string) {
+    const result = sentiment.analyze(review);
+    console.log(result);
+
+    const score = result.score;
+
+    // Map sentiment score to emojis
+    let emoji = "";
+
+    if (score > 0) {
+      emoji = "😍"; // Happy
+    } else if (score >= -2 && score < 0) {
+      emoji = "😭"; // Sad
+    } else if (score >= -5 && score < -2) {
+      emoji = "😡"; // Angry
+    } else {
+      emoji = "😮"; // Surprise
+    }
+
+    return emoji;
+  }
+
   return (
     <section className="flex flex-col gap-y-4 mb-4">
       {feedbacks
@@ -211,6 +236,18 @@ const Activities = () => {
                                 ★
                               </span>
                             )
+                          )}
+                        </span>
+                      </p>
+                    )}
+                    {feedback?.review && (
+                      <p className="flex flex-col gap-y-0.5">
+                        <span className="flex flex-row gap-x-1 items-center">
+                          Impression:
+                          {reviewStats(
+                            feedback?.review?.reviewTitle
+                              .replace(/[^a-zA-Z\s]/g, "")
+                              .toLowerCase()
                           )}
                         </span>
                       </p>
