@@ -1,0 +1,52 @@
+{
+  "name": "players_nexus",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "tailwindcss build -o ./styles.tailwind.css"
+  },
+  "dependencies": {
+    "@types/next": "^9.0.0",
+    "@types/react-modal": "^3.16.3",
+    "axios": "^1.6.2",
+    "core-js": "^3.33.3",
+    "date-fns": "^3.3.1",
+    "firebase": "^9.23.0",
+    "firebaseui": "^6.1.0",
+    "next": "^14.1.0",
+    "next-auth": "^4.24.5",
+    "prop-types": "^15.8.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-firebase-hooks": "^5.1.1",
+    "react-gist": "^1.2.4",
+    "react-icons": "^4.12.0",
+    "react-modal": "^3.16.1",
+    "react-slick": "^0.29.0",
+    "react-toastify": "^10.0.4",
+    "sentiment": "^5.0.2",
+    "slick-carousel": "^1.8.1",
+    "tailwindcss": "^3.3.6",
+    "uid": "^2.0.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.3",
+    "@babel/preset-env": "^7.23.3",
+    "@types/node": "^20",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@types/react-slick": "^0.23.13",
+    "@types/sentiment": "^5.0.4",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.1.0",
+    "postcss": "^8.4.32",
+    "typescript": "^4.9.5"
+  }
+}

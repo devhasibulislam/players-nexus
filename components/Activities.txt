@@ -1,0 +1,305 @@
+import { collection, getDocs, query, where } from "firebase/firestore";
+import React, { useState, useEffect } from "react";
+import { db } from "../firebase/firebase";
+import Image from "next/image";
+import Sentiment from "sentiment";
+import NewsHeading from "./NewsHeading";
+import ListCards from "./ListCards";
+
+const sentiment = new Sentiment();
+
+const Activities = () => {
+  const [myFriends, setMyFriends] = useState<any[]>([]);
+  const [listRatings, setListRatings] = useState<any[]>([]);
+  const [lists, setLists] = useState<any[]>([]);
+  const [currentCategory, setCurrentCategory] = useState<string>("");
+  const [isSearchActive, setIsSearchActive] = useState<boolean>(false);
+
+  useEffect(() => {
+    let email: string | null = "";
+
+    if (typeof window !== undefined) {
+      email = localStorage.getItem("email");
+    }
+
+    const retrieveData = async () => {
+      const listQuery = query(
+        collection(db, "friends"),
+        where("userId", "==", email)
+      );
+
+      const querySnapshot = await getDocs(listQuery);
+
+      const friendsData = querySnapshot.docs.map((doc) => {
+        return {
+          docId: doc.id,
+          ...doc.data(),
+        };
+      });
+
+      setMyFriends(friendsData);
+    };
+
+    retrieveData();
+  }, []);
+
+  function fetchData(email: string) {
+    const retrieveData = async () => {
+      const listQuery = query(
+        collection(db, "ratings"),
+        where("userId", "==", email)
+      );
+
+      const querySnapshot = await getDocs(listQuery);
+
+      querySnapshot.forEach((doc) => {
+        setListRatings((prevLists) => [...prevLists, doc.data()]);
+      });
+    };
+
+    const retrieveLists = async () => {
+      const listQuery = query(
+        collection(db, "lists"),
+        where("userId", "==", email)
+      );
+
+      const querySnapshot = await getDocs(listQuery);
+
+      querySnapshot.forEach((doc) => {
+        setLists((prevLists) => [...prevLists, doc.data()]);
+      });
+    };
+
+    retrieveData();
+    retrieveLists();
+  }
+
+  useEffect(() => {
+    if (myFriends.length > 0) {
+      myFriends.forEach((friend) => {
+        fetchData(friend?.friend?.email);
+      });
+    }
+  }, [myFriends]);
+
+  const handleCategoryChange = (category: string) => {
+    setCurrentCategory(category);
+    setIsSearchActive(false); // Reset search active state
+  };
+
+  console.log(lists);
+
+  return (
+    <section className="my-4">
+      {myFriends?.map((user) => (
+        <div key={user?.docId} className="flex flex-col gap-y-4 mt-8">
+          <div className="flex flex-col gap-y-2 items-center">
+            <Image
+              src={
+                user?.friend?.avatar ||
+                "https://t4.ftcdn.net/jpg/04/70/29/97/240_F_470299797_UD0eoVMMSUbHCcNJCdv2t8B2g1GVqYgs.jpg"
+              }
+              alt="Avatar"
+              width={100}
+              height={100}
+              className="h-[100px] w-[100px] rounded-full object-cover cursor-pointer"
+              onClick={() =>
+                window.open(`/friends/${user?.friend?.email}`, "_self")
+              }
+            />
+            <h1 className="text-2xl text-center">{user?.friend?.username}</h1>
+          </div>
+
+          <div className="flex flex-col gap-y-4">
+            <h1 className="text-3xl font-bold">
+              Custom Lists from {user?.friend?.username}
+            </h1>
+
+            <div className="flex flex-col gap-y-4">
+              <div className="flex flex-row flex-wrap items-center gap-4">
+                {lists
+                  ?.filter((list) => list.userId === user?.friend?.email)
+                  .map((list, index) => (
+                    <NewsHeading
+                      key={index}
+                      title={list?.listName}
+                      isActive={
+                        !isSearchActive && currentCategory === list?.listName
+                      }
+                      onClick={() => handleCategoryChange(list?.listName)}
+                    />
+                  ))}
+              </div>
+
+              <ListCards
+                email={user?.friend?.email}
+                currentCategory={currentCategory}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-y-4">
+            <h1 className="text-3xl font-bold">
+              Latest Ratings from {user?.friend?.username}
+            </h1>
+
+            <div className="grid grid-cols-1 gap-6">
+              {listRatings?.map(
+                ({ game: item, docId, ratings, createdAt, ...rating }) => {
+                  if (rating?.userId === user?.friend?.email) {
+                    return (
+                      ratings && (
+                        <div key={item.id} className="flex flex-row gap-x-4">
+                          <div
+                            key={item.id}
+                            className="flex flex-col gap-y-2 group"
+                          >
+                            <div className="h-[200px] relative group">
+                              <div className="h-[200px]">
+                                <Image
+                                  src={item.background_image}
+                                  alt={item.name}
+                                  height={200}
+                                  width={200}
+                                  className="rounded-lg h-[200px] w-[200px] object-cover"
+                                />
+                              </div>
+                              <div className="absolute top-0 left-0 z-10 bg-black/80 w-full h-full rounded-lg opacity-0 group-hover:opacity-100 flex flex-col gap-y-0.5 justify-center items-center cursor-pointer">
+                                <span className="cursor-text">
+                                  Overall: ⭐ {ratings?.overall}{" "}
+                                </span>
+                                <span className="cursor-text">
+                                  Story: ⭐ {ratings?.story}{" "}
+                                </span>
+                                <span className="cursor-text">
+                                  Gameplay: ⭐ {ratings?.gameplay}{" "}
+                                </span>
+                                <span className="cursor-text">
+                                  Graphics: ⭐ {ratings?.graphics}{" "}
+                                </span>
+                                <span className="cursor-text">
+                                  Audio: ⭐ {ratings?.audio}{" "}
+                                </span>
+                                <span className="cursor-text">
+                                  Multiplayer: ⭐ {ratings?.multiplayer}{" "}
+                                </span>
+                              </div>
+
+                              <p className="text-sm absolute bottom-2 left-0 text-white rounded-full w-full z-20 opacity-0 group-hover:opacity-100 text-center">
+                                {item?.name}
+                              </p>
+                            </div>
+                            <p className="text-sm hover:underline cursor-pointer flex items-center gap-x-1">
+                              Overall:
+                              {Array.from(
+                                { length: Math.floor(ratings?.overall) },
+                                (_, i) => (
+                                  <span
+                                    key={i}
+                                    className="text-yellow-600 text-xl"
+                                  >
+                                    ★
+                                  </span>
+                                )
+                              )}
+                            </p>
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold">{item?.name}</h3>
+                            <p className="text-base">
+                              {user?.friend?.username}
+                            </p>
+                            <p className="text-sm">
+                              {new Date(
+                                createdAt.seconds * 1000
+                              ).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    );
+                  }
+                }
+              )}
+            </div>
+          </div>
+
+          <hr />
+
+          <div className="flex flex-col gap-y-4">
+            <h1 className="text-3xl font-bold">
+              Latest Reviews from {user?.friend?.username}
+            </h1>
+
+            <div className="grid grid-cols-1 gap-6">
+              {listRatings?.map(
+                ({ game: item, docId, review, createdAt, ...rating }) => {
+                  if (rating?.userId === user?.friend?.email) {
+                    return (
+                      review && (
+                        <div key={item.id} className="flex flex-row gap-x-4">
+                          <Image
+                            src={user?.friend?.avatar}
+                            alt="avatar"
+                            height={30}
+                            width={30}
+                            className="h-[30px] w-[30px] object-cover rounded-full"
+                          />
+
+                          <div className="flex flex-col gap-y-4">
+                            <div className="flex flex-row gap-x-4 relative">
+                              <Image
+                                src={item.background_image}
+                                alt={item.name}
+                                height={150}
+                                width={150}
+                                style={{ objectFit: "cover" }}
+                                className="rounded-lg h-[150px] w-[150px] object-cover cursor-pointer hover:scale-105 transition-all"
+                              />
+
+                              <div className="flex flex-col gap-y-0.5 cursor-pointer">
+                                <h1 className="font-semibold text-xl">
+                                  {item.name}
+                                </h1>
+                                <p>
+                                  {Array.from(
+                                    { length: Math.floor(item.rating) },
+                                    (_, i) => (
+                                      <span key={i} className="text-yellow-600">
+                                        ★
+                                      </span>
+                                    )
+                                  )}
+                                </p>
+                                <p className="text-sm">
+                                  {new Date(
+                                    createdAt.seconds * 1000
+                                  ).toLocaleString()}
+                                </p>
+
+                                <p className="flex flex-col gap-y-0.5">
+                                  <span className="text-sm">
+                                    {review?.reviewTitle}
+                                  </span>
+                                  <span className="text-xs font-mono">
+                                    {review?.reviewText}
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    );
+                  }
+                }
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+};
+
+export default Activities;
